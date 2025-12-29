@@ -13,17 +13,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 dotenv.config();
-// Connect DB
+
 connectDB();
 
-// Connect Cloudinary
 connectCloudinary();
 
-// Middlewares
 app.use(express.json());
 app.use(cors());
-
-// Api Endpoints
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
