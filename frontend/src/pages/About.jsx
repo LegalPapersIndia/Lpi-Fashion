@@ -9,7 +9,7 @@ const About = () => {
       <section className="relative min-h-screen flex items-center justify-center bg-gray-50">
         <div className="absolute inset-0 bg-gray-100">
           <img
-            src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2400&auto=format&fit=crop"
+            src="https://images.pexels.com/photos/247204/pexels-photo-247204.jpeg?_gl=1*7u01vi*_ga*MTc0OTQ3NzEyOC4xNzY3MDgzNzkw*_ga_8JE65Q40S6*czE3NjcwODM3OTAkbzEkZzEkdDE3NjcwODM4NzgkajU3JGwwJGgw"
             alt="LPI Fashion"
             className="w-full h-full object-cover opacity-80"
             loading="eager"
