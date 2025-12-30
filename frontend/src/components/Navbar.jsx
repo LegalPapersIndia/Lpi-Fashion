@@ -75,11 +75,11 @@ const Navbar = () => {
                 <span>support@lpifashion.com</span>
               </a>
               <a
-                href="tel:+919876543210"
+                href="tel:+917505266931"
                 className="flex items-center gap-2 hover:text-amber-400 transition-colors group"
               >
                 <Phone className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span>+91 98765 43210</span>
+                <span>+91 75052 66931</span>
               </a>
               <div className="hidden md:flex items-center gap-2 opacity-90">
                 <MapPin className="w-4 h-4" />

@@ -125,7 +125,7 @@ const TermsOfService = () => {
             </p>
             <p className="mt-4">
               Email: <a href="mailto:hello@lpifashion.com" className="text-amber-700 hover:underline">hello@lpifashion.com</a><br />
-              Phone: <a href="tel:+919876543210" className="text-amber-700 hover:underline">+91 98765 43210</a>
+              Phone: <a href="tel:+917505266931" className="text-amber-700 hover:underline">+91 75052 66931</a>
             </p>
           </div>
         </div>

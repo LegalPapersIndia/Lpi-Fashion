@@ -133,9 +133,9 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold text-white mb-5">Contact</h3>
               <div className="space-y-4 text-gray-400">
-                <a href="tel:+919876543210" className="flex items-center gap-3 hover:text-amber-500 transition">
+                <a href="tel:+917505266931  " className="flex items-center gap-3 hover:text-amber-500 transition">
                   <Phone className="w-5 h-5 text-amber-600" />
-                  <span>+91 98765 43210</span>
+                  <span>+91 75052 66931</span>
                 </a>
                 <a href="mailto:hello@lpifashion.com" className="flex items-center gap-3 hover:text-amber-500 transition">
                   <Mail className="w-5 h-5 text-amber-600" />

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import { ShopContext } from "../contexts/ShopContext";
 import ProductItem from "./ProductItem";
 import { ArrowRight } from "lucide-react";
@@ -8,71 +8,76 @@ import { motion } from "framer-motion";
 export default function LatestCollection() {
   const { products } = useContext(ShopContext);
 
-  // Memoized: Get 12 latest products for better grid balance
   const latestProducts = useMemo(() => {
     if (!products || products.length === 0) return [];
-    return [...products].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 12);
+    return [...products]
+      .sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0))
+      .slice(0, 12);
   }, [products]);
 
-  // Staggered animation variants
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
+        staggerChildren: 0.12,
+        delayChildren: 0.3,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 60 },
-    show: { 
-      opacity: 1, 
+    hidden: { opacity: 0, y: 80, scale: 0.95 },
+    show: {
+      opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        duration: 0.8,
-        ease: "easeOut",
+        duration: 0.9,
+        ease: [0.6, -0.05, 0.01, 0.99],
       },
     },
   };
 
+  const titleVariants = {
+    hidden: { opacity: 0, y: 60 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 1.2, ease: "easeOut" },
+    },
+  };
+
   return (
-    <section className="relative py-28 lg:py-40 overflow-hidden bg-white">
-      {/* Subtle Ambient Background Layers */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-br from-amber-50/20 via-transparent to-emerald-50/20" />
+    <section className="relative py-16 lg:py-24 overflow-hidden bg-gradient-to-b from-gray-50 via-white to-gray-50">
+      {/* Floating Background Orbs with Parallax Feel */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-amber-300/20 to-orange-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-20 -right-32 w-80 h-80 bg-gradient-to-bl from-emerald-300/20 to-teal-400/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-96 bg-gradient-to-t from-amber-100/30 to-transparent blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="text-center mb-20 lg:mb-32"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-150px" }}
+          className="text-center mb-16 lg:mb-24"
         >
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-amber-600 text-sm font-bold uppercase tracking-[0.4em] mb-6"
-          >
-            Autumn Winter 2025 • New Arrivals
-          </motion.p>
+          <motion.div variants={titleVariants}>
+            <p className="text-sm lg:text-base font-semibold uppercase tracking-[0.5em] text-amber-700 mb-6 opacity-90">
+              Autumn Winter 2025 • New Arrivals
+            </p>
+          </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight leading-none"
+            variants={titleVariants}
+            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-none mb-8"
           >
             <span className="block text-gray-900">Latest</span>
-            <span className="block bg-gradient-to-r from-amber-600 via-amber-500 to-emerald-600 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-amber-600 via-orange-500 to-emerald-600 bg-clip-text text-transparent drop-shadow-sm">
               Collection
             </span>
           </motion.h2>
@@ -80,24 +85,12 @@ export default function LatestCollection() {
           <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-10 text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light"
+            transition={{ delay: 0.8, duration: 1 }}
+            className="text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light px-4"
           >
             Discover handcrafted luxury redefined. Each piece embodies timeless Indian artistry,
             premium sustainable fabrics, and contemporary silhouettes — exclusively for the modern connoisseur.
           </motion.p>
-
-          {/* Elegant Divider */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="mt-16 flex items-center justify-center gap-12 origin-center"
-          >
-            <div className="h-px w-40 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-            <span className="text-3xl text-amber-500">✦</span>
-            <div className="h-px w-40 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-          </motion.div>
         </motion.div>
 
         {/* Products Grid */}
@@ -109,53 +102,69 @@ export default function LatestCollection() {
             viewport={{ once: true, margin: "-100px" }}
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 lg:gap-12"
           >
-            {latestProducts.map((item, index) => (
+            {latestProducts.map((item) => (
               <motion.div
                 key={item._id}
                 variants={itemVariants}
-                whileHover={{ y: -12 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                whileHover={{ y: -16, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="group"
               >
-                <ProductItem
-                  id={item._id}
-                  image={item.image}
-                  name={item.name}
-                  price={item.price}
-                  category={item.category}
-                  subcategory={item.subCategory}
-                />
+                <div className="relative">
+                  {/* Subtle glow on hover */}
+                  <div className="absolute -inset-4 bg-gradient-to-r from-amber-400/20 to-emerald-400/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700 -z-10" />
+                  
+                  <ProductItem
+                    id={item._id}
+                    image={item.image}
+                    name={item.name}
+                    price={item.price}
+                    category={item.category}
+                    subcategory={item.subCategory}
+                  />
+                </div>
               </motion.div>
             ))}
           </motion.div>
         ) : (
-          <div className="text-center py-32">
-            <p className="text-gray-400 text-xl font-light animate-pulse">
-              Curating exclusive pieces for you...
-            </p>
+          <div className="text-center py-40">
+            <div className="space-y-4">
+              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-amber-200 to-emerald-200 rounded-full blur-2xl animate-pulse" />
+              <p className="text-2xl text-gray-400 font-light animate-pulse">
+                Curating exclusive pieces for you...
+              </p>
+            </div>
           </div>
         )}
 
-        {/* CTA Section */}
+        {/* Premium CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.4 }}
-          className="text-center mt-28 lg:mt-36"
+          transition={{ duration: 1.2, delay: 0.6 }}
+          className="text-center mt-32 lg:mt-40"
         >
           <Link
             to="/collection"
-            className="group inline-flex items-center gap-5 px-12 py-6 rounded-full bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xl font-semibold shadow-2xl hover:shadow-amber-600/30 hover:from-amber-700 hover:to-amber-800 transition-all duration-500 transform hover:scale-105"
+            className="group relative inline-flex items-center gap-6 px-14 py-7 rounded-full text-xl lg:text-2xl font-bold text-white overflow-hidden transform hover:scale-105 transition-all duration-700 shadow-2xl"
           >
-            Explore Full Collection
-            <ArrowRight className="w-7 h-7 group-hover:translate-x-4 transition-transform duration-500" />
+            {/* Gradient Background with Shimmer */}
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-600 via-orange-600 to-emerald-600" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12" />
+            
+            <span className="relative z-10 drop-shadow-md">
+              Explore Full Collection
+            </span>
+            
+            <ArrowRight className="w-8 h-8 relative z-10 group-hover:translate-x-6 transition-transform duration-700" />
           </Link>
 
           <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-10 text-sm uppercase tracking-[0.3em] text-gray-500 font-medium"
+            transition={{ delay: 1 }}
+            className="mt-12 text-sm lg:text-base uppercase tracking-[0.4em] text-gray-500 font-medium"
           >
             Limited Edition • Free Worldwide Shipping • Complimentary Gift Packaging
           </motion.p>
