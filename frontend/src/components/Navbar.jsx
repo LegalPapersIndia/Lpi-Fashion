@@ -83,7 +83,7 @@ const Navbar = () => {
               </a>
               <div className="hidden md:flex items-center gap-2 opacity-90">
                 <MapPin className="w-4 h-4" />
-                <span>Mumbai, Maharashtra, India</span>
+                <span>Noida , Uttar Pradesh , India</span>
               </div>
             </div>
 

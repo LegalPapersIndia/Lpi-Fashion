@@ -15,8 +15,7 @@ const ShopContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [products, setProducts] = useState([]);
   const [token, setToken] = useState("");
-  const [user, setUser] = useState(null); // ← NEW: Store user data (name, etc.)
-
+  const [user, setUser] = useState(null); 
   const navigate = useNavigate();
 
   // Load token from localStorage on app start
