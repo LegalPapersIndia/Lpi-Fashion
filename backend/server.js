@@ -8,7 +8,6 @@ import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 
-// App Config
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -17,21 +16,16 @@ dotenv.config();
 connectDB();
 connectCloudinary();
 
-// CORS Configuration - Allow ALL origins using *
 app.use(
   cors({
-    origin: "*", // This allows requests from any domain
-    credentials: true, // Important if you're using cookies or auth headers
+    origin: "*",
+    credentials: true,
     optionsSuccessStatus: 200,
   })
 );
 
-// If you want even simpler (same effect):
-// app.use(cors({ origin: "*" }));
-
 app.use(express.json());
 
-// Routes
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
