@@ -3,7 +3,15 @@ import { ShopContext } from "../contexts/ShopContext";
 import CartTotal from "../components/CartTotal";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Package, Smartphone, ArrowRight } from "lucide-react";
+import {
+  MapPin,
+  CreditCard,
+  Truck,
+  Smartphone,
+  ChevronRight,
+  Lock,
+  CheckCircle2,
+} from "lucide-react";
 
 const PlaceOrder = () => {
   const {
@@ -13,12 +21,12 @@ const PlaceOrder = () => {
     cartItems,
     setCartItems,
     getCartAmount,
-    deliveryFee,
     products,
   } = useContext(ShopContext);
 
   const [method, setMethod] = useState("cod");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -32,9 +40,44 @@ const PlaceOrder = () => {
     phone: "",
   });
 
+  const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState(100);
+
+  const lowFeeStates = ["Delhi", "Uttar Pradesh", "Haryana", "Rajasthan"];
+
   const onChangeHandler = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "zipcode" && value.length === 6 && /^\d{6}$/.test(value)) {
+      fetchStateFromPin(value);
+    }
+  };
+
+  const fetchStateFromPin = async (pin) => {
+    setLoadingLocation(true);
+    try {
+      const response = await axios.get(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = response.data[0];
+
+      if (data?.Status === "Success" && data?.PostOffice?.length > 0) {
+        const postOffice = data.PostOffice[0];
+        const state = postOffice.State?.trim() || "";
+
+        setFormData((prev) => ({
+          ...prev,
+          city: postOffice.District || postOffice.Name || prev.city,
+          state,
+        }));
+
+        setCalculatedDeliveryFee(lowFeeStates.includes(state) ? 50 : 100);
+      } else {
+        setCalculatedDeliveryFee(100);
+      }
+    } catch {
+      setCalculatedDeliveryFee(100);
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
   const onSubmitHandler = async (e) => {
@@ -42,18 +85,17 @@ const PlaceOrder = () => {
     setIsPlacingOrder(true);
 
     try {
-      // Build order items array
       const orderItems = [];
       for (const itemId in cartItems) {
         for (const size in cartItems[itemId]) {
           if (cartItems[itemId][size] > 0) {
-            const productData = products.find((p) => p._id === itemId);
-            if (productData) {
+            const product = products.find((p) => p._id === itemId);
+            if (product) {
               orderItems.push({
                 _id: itemId,
-                name: productData.name,
-                price: productData.price,
-                image: productData.image,
+                name: product.name,
+                price: product.price,
+                image: product.image,
                 size,
                 quantity: cartItems[itemId][size],
               });
@@ -65,42 +107,35 @@ const PlaceOrder = () => {
       const orderData = {
         address: formData,
         items: orderItems,
-        amount: getCartAmount() + (deliveryFee || 0),
+        amount: getCartAmount() + calculatedDeliveryFee,
+        shippingFee: calculatedDeliveryFee,
       };
 
-      // Cash on Delivery
+      let response;
+
       if (method === "cod") {
-        const response = await axios.post(
-          `${backendUrl}/api/order/place`,
-          orderData,
-          { headers: { token } }
-        );
+        response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
+          headers: { token },
+        });
+      } else if (method === "phonepe") {
+        response = await axios.post(`${backendUrl}/api/order/phonepe`, orderData, {
+          headers: { token },
+        });
 
-        if (response.data.success) {
-          setCartItems({});
-          toast.success("Order placed successfully!");
-          navigate("/orders");
-        } else {
-          toast.error(response.data.message || "Failed to place order");
-        }
-      }
-
-      // Online Payment (PhonePe / UPI)
-      if (method === "phonepe") {
-        const response = await axios.post(
-          `${backendUrl}/api/order/phonepe`,
-          orderData,
-          { headers: { token } }
-        );
-
-        if (response.data.success) {
+        if (response.data.success && response.data.paymentUrl) {
           window.location.replace(response.data.paymentUrl);
-        } else {
-          toast.error(response.data.message || "Payment failed to start");
+          return;
         }
       }
-    } catch (error) {
-      console.error("Order error:", error);
+
+      if (response?.data.success) {
+        setCartItems({});
+        toast.success("Order placed successfully!");
+        navigate("/orders");
+      } else {
+        toast.error(response?.data.message || "Failed to place order");
+      }
+    } catch (err) {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsPlacingOrder(false);
@@ -108,196 +143,254 @@ const PlaceOrder = () => {
   };
 
   return (
-    <section className="py-12 lg:py-20 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900">
-            Checkout
-          </h1>
-          <p className="mt-4 text-lg text-gray-600">
-            Review your information and complete your order
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 md:py-16">
+        {/* Header */}
+        <div className="text-center mb-12 md:mb-16">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <Lock className="text-amber-600" size={28} />
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
+              Secure Checkout
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 max-w-xl mx-auto">
+            Complete your order securely in just a few steps
           </p>
         </div>
 
-        <form onSubmit={onSubmitHandler} className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-
-          {/* Left: Delivery Address */}
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Delivery Address
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <input
-                required
-                name="firstName"
-                value={formData.firstName}
-                onChange={onChangeHandler}
-                placeholder="First Name"
-                className="px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-              />
-              <input
-                required
-                name="lastName"
-                value={formData.lastName}
-                onChange={onChangeHandler}
-                placeholder="Last Name"
-                className="px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-              />
-            </div>
-
-            <input
-              required
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={onChangeHandler}
-              placeholder="Email Address"
-              className="w-full px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-            />
-
-            <input
-              required
-              name="street"
-              value={formData.street}
-              onChange={onChangeHandler}
-              placeholder="Street Address"
-              className="w-full px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <input
-                required
-                name="city"
-                value={formData.city}
-                onChange={onChangeHandler}
-                placeholder="City"
-                className="px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-              />
-              <input
-                required
-                name="state"
-                value={formData.state}
-                onChange={onChangeHandler}
-                placeholder="State"
-                className="px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <input
-                required
-                name="zipcode"
-                value={formData.zipcode}
-                onChange={onChangeHandler}
-                placeholder="PIN Code"
-                className="px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-              />
-              <input
-                required
-                name="country"
-                value={formData.country}
-                onChange={onChangeHandler}
-                placeholder="Country"
-                className="px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-              />
-            </div>
-
-            <input
-              required
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={onChangeHandler}
-              placeholder="Phone Number"
-              className="w-full px-5 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 transition"
-            />
-          </div>
-
-          {/* Right: Order Summary + Payment */}
-          <div className="space-y-8">
-            <CartTotal />
-
-            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 lg:p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">
-                Payment Method
-              </h3>
-
-              <div className="space-y-4">
-                {/* Online Payment */}
-                <label
-                  className={`flex items-center gap-4 p-5 border-2 rounded-lg cursor-pointer transition-all ${
-                    method === "phonepe"
-                      ? "border-amber-600 bg-amber-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="phonepe"
-                    checked={method === "phonepe"}
-                    onChange={() => setMethod("phonepe")}
-                    className="w-5 h-5 text-amber-600"
-                  />
-                  <Smartphone className="w-6 h-6 text-amber-700" />
-                  <div>
-                    <p className="font-medium">UPI, Cards & Net Banking</p>
-                    <p className="text-sm text-gray-500">Secure payment via PhonePe</p>
-                  </div>
-                </label>
-
-                {/* Cash on Delivery */}
-                <label
-                  className={`flex items-center gap-4 p-5 border-2 rounded-lg cursor-pointer transition-all ${
-                    method === "cod"
-                      ? "border-amber-600 bg-amber-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="cod"
-                    checked={method === "cod"}
-                    onChange={() => setMethod("cod")}
-                    className="w-5 h-5 text-amber-600"
-                  />
-                  <Package className="w-6 h-6 text-amber-700" />
-                  <div>
-                    <p className="font-medium">Cash on Delivery</p>
-                    <p className="text-sm text-gray-500">Pay when you receive</p>
-                  </div>
-                </label>
+        <form onSubmit={onSubmitHandler} className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Left column - Address + Payment */}
+          <div className="lg:col-span-8 space-y-8 lg:space-y-10">
+            {/* Delivery Information */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+              <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h2 className="text-xl font-semibold flex items-center gap-3 text-gray-900">
+                  <MapPin className="text-amber-600" size={22} />
+                  Delivery Details
+                </h2>
               </div>
 
-              {/* Submit Button */}
+              <div className="p-6 lg:p-8 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <FloatingInput
+                    label="First Name"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={onChangeHandler}
+                  />
+                  <FloatingInput
+                    label="Last Name"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={onChangeHandler}
+                  />
+                </div>
+
+                <FloatingInput
+                  label="Email Address"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={onChangeHandler}
+                />
+
+                <FloatingInput
+                  label="Street Address, House No., Landmark"
+                  name="street"
+                  value={formData.street}
+                  onChange={onChangeHandler}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <FloatingInput
+                    label="City / Town"
+                    name="city"
+                    value={formData.city}
+                    onChange={onChangeHandler}
+                  />
+                  <FloatingInput
+                    label="State"
+                    name="state"
+                    value={formData.state}
+                    onChange={onChangeHandler}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative">
+                  <FloatingInput
+                    label="PIN Code"
+                    name="zipcode"
+                    value={formData.zipcode}
+                    onChange={onChangeHandler}
+                    maxLength={6}
+                  >
+                    {loadingLocation && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin h-5 w-5 border-2 border-amber-500 rounded-full border-t-transparent" />
+                      </div>
+                    )}
+                  </FloatingInput>
+
+                  <FloatingInput
+                    label="Mobile Number"
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={onChangeHandler}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2.5 text-sm pt-2">
+                  <Truck size={16} className="text-amber-600" />
+                  <span className="text-gray-700">
+                    Shipping:{" "}
+                    <strong className="text-gray-900 font-medium">
+                      ₹{calculatedDeliveryFee}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+              <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h2 className="text-xl font-semibold flex items-center gap-3 text-gray-900">
+                  <CreditCard className="text-amber-600" size={22} />
+                  Payment Method
+                </h2>
+              </div>
+
+              <div className="p-6 lg:p-8 space-y-4">
+                <PaymentOption
+                  id="phonepe"
+                  label="UPI, Cards & Net Banking"
+                  description="Secure payment via PhonePe"
+                  icon={<Smartphone size={20} />}
+                  checked={method === "phonepe"}
+                  onChange={() => setMethod("phonepe")}
+                />
+
+                <PaymentOption
+                  id="cod"
+                  label="Cash on Delivery"
+                  description="Pay when your order arrives"
+                  icon={<Truck size={20} />}
+                  checked={method === "cod"}
+                  onChange={() => setMethod("cod")}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right column - Summary + Button */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="lg:sticky lg:top-8">
+              <CartTotal
+                deliveryFee={calculatedDeliveryFee}
+                getCartAmount={getCartAmount}
+              />
+
               <button
                 type="submit"
-                disabled={isPlacingOrder}
-                className="w-full mt-8 py-4 bg-gray-900 text-white font-semibold text-lg rounded-lg hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition flex items-center justify-center gap-3"
+                disabled={isPlacingOrder || loadingLocation}
+                className={`
+                  mt-8 w-full py-5 px-8 rounded-2xl font-semibold text-lg
+                  transition-all duration-300 shadow-lg
+                  flex items-center justify-center gap-3 group
+                  ${
+                    isPlacingOrder || loadingLocation
+                      ? "bg-gray-400 cursor-not-allowed text-white/80"
+                      : "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white hover:shadow-xl hover:scale-[1.02]"
+                  }
+                `}
               >
                 {isPlacingOrder ? (
-                  "Processing..."
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing...
+                  </>
                 ) : (
                   <>
-                    Complete Order
-                    <ArrowRight className="w-5 h-5" />
+                    Place Order Securely
+                    <ChevronRight className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
 
-              <p className="mt-6 text-center text-sm text-gray-600">
-                Secure checkout • Free returns • Fast delivery
-              </p>
+              <div className="mt-6 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
+                <CheckCircle2 size={16} className="text-green-600" />
+                Secure & Encrypted Checkout
+              </div>
             </div>
           </div>
         </form>
       </div>
-    </section>
+    </div>
   );
 };
+
+/* Floating label input */
+const FloatingInput = ({ label, children, ...props }) => {
+  const hasValue = props.value?.length > 0;
+
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        className={`
+          peer w-full px-5 pt-6 pb-2 rounded-xl border border-gray-200
+          focus:border-amber-500 focus:ring-4 focus:ring-amber-100/50
+          bg-white/70 backdrop-blur-sm transition-all duration-200
+          outline-none shadow-sm hover:border-gray-300
+          ${hasValue ? "pt-6" : "pt-4"}
+        `}
+        placeholder=" "
+      />
+      <label
+        className={`
+          absolute left-5 text-gray-500 transition-all duration-200 pointer-events-none
+          ${hasValue
+            ? "text-xs top-2 text-amber-700 font-medium"
+            : "text-base top-4 peer-focus:text-xs peer-focus:top-2 peer-focus:text-amber-700 peer-focus:font-medium"}
+        `}
+      >
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+};
+
+/* Payment Option Card */
+const PaymentOption = ({ id, label, description, icon, checked, onChange }) => (
+  <label
+    htmlFor={id}
+    className={`
+      flex items-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200
+      ${
+        checked
+          ? "border-amber-600 bg-amber-50/40 shadow-sm"
+          : "border-gray-200 hover:border-gray-300 bg-white/60 hover:bg-white/80"
+      }
+    `}
+  >
+    <input
+      type="radio"
+      id={id}
+      name="payment"
+      checked={checked}
+      onChange={onChange}
+      className="w-5 h-5 text-amber-600 border-gray-300 focus:ring-amber-500"
+    />
+    <div className="ml-4 flex-1">
+      <div className="flex items-center gap-3">
+        <div className="text-amber-700">{icon}</div>
+        <p className="font-medium text-gray-900">{label}</p>
+      </div>
+      <p className="text-sm text-gray-500 mt-0.5">{description}</p>
+    </div>
+  </label>
+);
 
 export default PlaceOrder;

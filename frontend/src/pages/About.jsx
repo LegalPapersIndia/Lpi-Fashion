@@ -1,125 +1,151 @@
 import React from "react";
-import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArrowRight, Sparkles, HeartHandshake, Clock } from "lucide-react";
 
 const About = () => {
   return (
     <>
-      {/* Hero Section – Clean & Professional */}
-      <section className="relative min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="absolute inset-0 bg-gray-100">
+      {/* Hero – Elevated & cinematic */}
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gray-900">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0">
           <img
-            src="https://images.pexels.com/photos/247204/pexels-photo-247204.jpeg?_gl=1*7u01vi*_ga*MTc0OTQ3NzEyOC4xNzY3MDgzNzkw*_ga_8JE65Q40S6*czE3NjcwODM3OTAkbzEkZzEkdDE3NjcwODM4NzgkajU3JGwwJGgw"
-            alt="LPI Fashion"
-            className="w-full h-full object-cover opacity-80"
+            src="https://images.pexels.com/photos/247204/pexels-photo-247204.jpeg"
+            alt="LPI Fashion background"
+            className="w-full h-full object-cover brightness-[0.45] scale-105 transition-transform duration-[20s]"
             loading="eager"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
         </div>
 
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-          <p className="text-sm font-medium uppercase tracking-wider text-amber-700 mb-6">
-            Since 2025
+        {/* Content */}
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+          <p className="text-base md:text-lg font-medium uppercase tracking-widest text-amber-400/90 mb-6 animate-fade-in-up">
+            Established 2025
           </p>
-          <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-gray-900">
+
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight text-white leading-none animate-fade-in-up animation-delay-200">
             <span className="block">LPI</span>
-            <span className="block text-amber-700 mt-2">Fashion</span>
+            <span className="block mt-2 md:mt-4 bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+              Fashion
+            </span>
           </h1>
-          <p className="mt-8 text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Blending traditional Indian craftsmanship with modern design
+
+          <p className="mt-8 md:mt-10 text-xl md:text-2xl lg:text-3xl text-gray-200 font-light max-w-4xl mx-auto leading-relaxed animate-fade-in-up animation-delay-400">
+            Where timeless Indian craftsmanship meets modern elegance
           </p>
+
+          <div className="mt-10 md:mt-12">
+            <Link
+              to="/collection"
+              className="inline-flex items-center gap-3 px-8 md:px-10 py-4 md:py-5 bg-white/10 backdrop-blur-md text-white font-medium text-lg rounded-full border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-[1.03] shadow-lg"
+            >
+              Discover the Collection
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Our Story – Balanced & Approachable */}
-      <section className="py-20 lg:py-28 bg-white">
+      {/* Our Story – Warm & human */}
+      <section className="py-20 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div className="order-2 lg:order-1">
-            <img
-              src="https://media.landmarkshops.in/cdn-cgi/image/h=831,w=615,q=85,fit=cover/max-new/1000014200413-Grey-DARKGREY-1000014200413_04-2100.jpg"
-              alt="Artisan crafting garment"
-              className="w-full rounded-xl shadow-lg object-cover"
-              loading="lazy"
-            />
+          <div className="order-2 lg:order-1 animate-fade-in-left">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img
+                src="https://media.landmarkshops.in/cdn-cgi/image/h=831,w=615,q=85,fit=cover/max-new/1000014200413-Grey-DARKGREY-1000014200413_04-2100.jpg"
+                alt="Artisan handcrafting garment"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </div>
           </div>
 
-          <div className="order-1 lg:order-2 space-y-8">
+          <div className="order-1 lg:order-2 space-y-8 animate-fade-in-right">
             <div>
-              <p className="text-sm font-medium uppercase tracking-wider text-amber-700 mb-4">
+              <p className="text-sm md:text-base font-medium uppercase tracking-wider text-amber-700 mb-4">
                 Our Story
               </p>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                Crafting Quality
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Crafted with
                 <br />
-                <span className="text-amber-700">With Care</span>
+                <span className="text-amber-700">heart & heritage</span>
               </h2>
             </div>
 
-            <div className="space-y-5 text-lg text-gray-600 leading-relaxed">
+            <div className="space-y-6 text-lg md:text-xl text-gray-700 leading-relaxed">
               <p>
-                LPI Fashion was born from a passion to celebrate Indian craftsmanship while creating clothing that fits seamlessly into modern life.
+                LPI Fashion was founded with a simple belief: clothing should tell a story — one of tradition, skill, and soul.
               </p>
               <p>
-                We work closely with skilled artisans across India to bring traditional techniques into contemporary designs — ensuring every piece is comfortable, durable, and beautifully made.
+                We partner with master artisans across India, preserving centuries-old techniques while designing pieces that feel relevant today.
               </p>
               <p>
-                From fabric selection to final stitching, quality and attention to detail guide everything we do.
+                Every stitch, every fabric choice, every detail is intentional — because we believe you deserve garments that last, both in style and in quality.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Our Values – Simple Grid */}
-      <section className="py-20 lg:py-28 bg-gray-50">
+      {/* Values – Icon-driven & elegant */}
+      <section className="py-20 lg:py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <p className="text-sm font-medium uppercase tracking-wider text-amber-700 mb-4">
-            Our Values
+          <p className="text-sm md:text-base font-medium uppercase tracking-wider text-amber-700 mb-6">
+            Our Core Values
           </p>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-16">
-            Designed to Last
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-16 md:mb-20">
+            Built to Last
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
             {[
               {
-                title: "Quality First",
-                desc: "Premium materials and careful construction in every garment.",
+                icon: <Sparkles size={36} />,
+                title: "Uncompromising Quality",
+                desc: "Only the finest fabrics and meticulous craftsmanship go into every piece.",
               },
               {
-                title: "Ethical Making",
-                desc: "Fair partnerships with artisans and sustainable practices.",
+                icon: <HeartHandshake size={36} />,
+                title: "Ethical & Fair",
+                desc: "Honest partnerships with artisans and a commitment to sustainable practices.",
               },
               {
-                title: "Timeless Style",
-                desc: "Clean, versatile designs that stay relevant season after season.",
+                icon: <Clock size={36} />,
+                title: "Timeless Design",
+                desc: "Versatile silhouettes that transcend trends and become wardrobe essentials.",
               },
             ].map((item, i) => (
               <div
                 key={i}
-                className="bg-white p-8 rounded-xl shadow-sm border border-gray-200"
+                className="bg-white/70 backdrop-blur-sm p-8 lg:p-10 rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md hover:-translate-y-2 transition-all duration-300 group"
               >
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                <div className="text-amber-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  {item.icon}
+                </div>
+                <h3 className="text-2xl lg:text-3xl font-semibold text-gray-900 mb-4">
                   {item.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">{item.desc}</p>
+                <p className="text-gray-600 text-lg leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Closing CTA */}
-      <section className="py-20 lg:py-28 bg-white text-center">
+      {/* Final CTA – Warm & confident */}
+      <section className="py-20 lg:py-32 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 text-center">
         <div className="max-w-4xl mx-auto px-6">
-          <p className="text-3xl lg:text-4xl font-medium text-gray-800 leading-relaxed max-w-3xl mx-auto">
-            We make clothes that feel good to wear —
-            <span className="text-amber-700 font-semibold"> and even better to own.</span>
+          <p className="text-3xl md:text-4xl lg:text-5xl font-medium text-gray-900 leading-tight max-w-4xl mx-auto">
+            Clothing that doesn’t just look good —{" "}
+            <span className="text-amber-700 font-semibold">it feels like home.</span>
           </p>
 
-          <div className="mt-12">
+          <div className="mt-12 md:mt-16">
             <Link
               to="/collection"
-              className="inline-flex items-center gap-4 px-10 py-5 bg-gray-900 text-white font-medium text-lg rounded-full hover:bg-gray-800 transition shadow-md"
+              className="inline-flex items-center gap-4 px-10 md:px-12 py-5 md:py-6 bg-gradient-to-r from-amber-600 to-amber-700 text-white font-semibold text-lg md:text-xl rounded-full hover:from-amber-700 hover:to-amber-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.03]"
             >
               Explore the Collection
               <ArrowRight className="w-6 h-6" />

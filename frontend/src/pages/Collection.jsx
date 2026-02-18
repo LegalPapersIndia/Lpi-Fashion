@@ -101,32 +101,6 @@ const Collection = () => {
             </select>
           </div>
 
-          {/* Applied Filters Chips (if any) */}
-          {activeFilters > 0 && (
-            <div className="flex flex-wrap items-center gap-3 mb-8">
-              <span className="text-sm font-medium text-gray-700">Active filters:</span>
-              {[...category, ...subCategory].map((filter) => (
-                <span
-                  key={filter}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full text-sm"
-                >
-                  {filter}
-                  <button
-                    onClick={() => {
-                      if (category.includes(filter)) toggleCategory(filter);
-                      if (subCategory.includes(filter)) toggleSubCategory(filter);
-                    }}
-                    className="hover:text-red-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </span>
-              ))}
-              <button onClick={clearFilters} className="text-sm text-amber-700 hover:underline ml-4">
-                Clear all
-              </button>
-            </div>
-          )}
 
           {/* Layout Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
