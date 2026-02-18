@@ -1,64 +1,98 @@
 import React from "react";
-import { Truck, ShieldCheck, RefreshCw, Package, Lock, Info } from "lucide-react";
+import { Truck, ShieldCheck, RefreshCw, Package, Lock, Info, Calendar } from "lucide-react";
 
-const CartTotal = ({ deliveryFee = 0, currency = "₹", getCartAmount, isCartPage = false }) => {
+const CartTotal = ({ 
+  deliveryFee = 0, 
+  currency = "₹", 
+  getCartAmount, 
+  discount = 0,      // new prop
+  isCartPage = false 
+}) => {
   const subtotal = getCartAmount ? getCartAmount() : 0;
   const shipping = deliveryFee;
-  const total = subtotal + shipping;
+  const total = subtotal + shipping - discount;
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
-      <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-        <h3 className="text-xl font-semibold flex items-center gap-2.5 text-gray-900">
-          <Lock size={20} className="text-amber-600" />
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="px-7 py-6 bg-gray-50/70 border-b border-gray-100">
+        <h3 className="text-2xl font-medium flex items-center gap-3 text-gray-900">
+          <Lock size={22} className="text-amber-700" strokeWidth={2.2} />
           Order Summary
         </h3>
       </div>
 
-      <div className="p-6 lg:p-8 space-y-6">
-        <div className="space-y-4 text-base">
+      {/* Breakdown */}
+      <div className="p-7 lg:p-9 space-y-7 text-base">
+        <div className="space-y-5">
           <div className="flex justify-between text-gray-700">
             <span>Subtotal</span>
-            <span>{currency}{subtotal.toLocaleString()}</span>
+            <span className="font-medium">{currency}{subtotal.toLocaleString()}</span>
           </div>
 
+          {discount > 0 && (
+            <div className="flex justify-between text-green-700">
+              <span>Discount / Offer</span>
+              <span>-{currency}{discount.toLocaleString()}</span>
+            </div>
+          )}
+
           <div className="flex justify-between items-center text-gray-700">
-            <span>Shipping</span>
+            <span className="flex items-center gap-2">
+              Shipping
+              <Info size={14} className="text-gray-400" />
+            </span>
+
             {isCartPage ? (
-              <span className="text-sm text-amber-700 flex items-center gap-1.5">
-                <Info size={14} />
-                Calculated at checkout
+              <span className="text-sm text-amber-800 font-medium">
+                Calculated at next step
+              </span>
+            ) : shipping === 0 ? (
+              <span className="text-green-600 font-semibold flex items-center gap-1.5">
+                <Truck size={16} /> Free
               </span>
             ) : (
-              <span className={shipping === 50 ? "text-green-600 font-medium" : ""}>
-                {shipping === 0 ? "Free" : `${currency}${shipping}`}
-              </span>
+              <span className="font-medium">{currency}{shipping.toLocaleString()}</span>
             )}
           </div>
 
-          <hr className="border-gray-200 my-4" />
+          {/* Estimated Delivery */}
+          <div className="flex justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
+            <span className="flex items-center gap-2">
+              <Calendar size={15} className="text-amber-700" />
+              Estimated Delivery
+            </span>
+            <span>3–5 business days (Tracked)</span>
+          </div>
 
-          <div className="flex justify-between text-xl font-bold text-gray-900 pt-2">
+          <hr className="border-gray-200 my-5" />
+
+          <div className="flex justify-between items-center text-2xl font-semibold text-gray-900">
             <span>Total</span>
             <span>{currency}{total.toLocaleString()}</span>
           </div>
         </div>
 
-        <div className="pt-6 space-y-3.5 text-sm text-gray-600">
-          <TrustItem icon={<ShieldCheck size={18} />} text="100% Secure Payment" />
-          <TrustItem icon={<RefreshCw size={18} />} text="Easy 7-day Returns" />
-          <TrustItem icon={<Truck size={18} />} text="Fast & Tracked Delivery" />
-          <TrustItem icon={<Package size={18} />} text="Carefully Packaged" />
+        {/* Trust & Reassurance */}
+        <div className="pt-5 grid grid-cols-2 gap-5 text-sm text-gray-600">
+          <TrustItem icon={<ShieldCheck size={18} />} text="Secure Checkout" />
+          <TrustItem icon={<RefreshCw size={18} />} text="7-Day Returns" />
+          <TrustItem icon={<Truck size={18} />} text="Tracked Delivery" />
+          <TrustItem icon={<Package size={18} />} text="Premium Packaging" />
         </div>
+
+        <p className="text-xs text-gray-500 text-center pt-4 border-t border-gray-100">
+          All prices include applicable taxes. International orders may be subject to customs duties.
+        </p>
       </div>
     </div>
   );
 };
 
 const TrustItem = ({ icon, text }) => (
-  <div className="flex items-center gap-3">
-    <div className="text-amber-600">{icon}</div>
-    <span>{text}</span>
+  <div className="flex items-start gap-3">
+    <div className="text-amber-700 mt-0.5">{icon}</div>
+    <span className="leading-tight">{text}</span>
   </div>
 );
 
