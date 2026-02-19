@@ -22,6 +22,9 @@ const PlaceOrder = () => {
     setCartItems,
     getCartAmount,
     products,
+    discountAmount: contextDiscount = 0,          // default 0 if undefined
+    appliedPromo: contextAppliedPromo,
+    clearPromo,
   } = useContext(ShopContext);
 
   const [method, setMethod] = useState("cod");
@@ -43,6 +46,10 @@ const PlaceOrder = () => {
   const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState(100);
 
   const lowFeeStates = ["Delhi", "Uttar Pradesh", "Haryana", "Rajasthan"];
+
+  // Calculate final amount **after** all dependencies are available
+  const subtotal = getCartAmount?.() || 0;
+  const finalAmount = subtotal + calculatedDeliveryFee - contextDiscount;
 
   const onChangeHandler = (e) => {
     const { name, value } = e.target;
@@ -95,7 +102,7 @@ const PlaceOrder = () => {
                 _id: itemId,
                 name: product.name,
                 price: product.price,
-                image: product.image,
+                image: product.image[0], // usually first image
                 size,
                 quantity: cartItems[itemId][size],
               });
@@ -107,8 +114,14 @@ const PlaceOrder = () => {
       const orderData = {
         address: formData,
         items: orderItems,
-        amount: getCartAmount() + calculatedDeliveryFee,
+        amount: finalAmount,
         shippingFee: calculatedDeliveryFee,
+        discount: contextAppliedPromo
+          ? {
+              code: contextAppliedPromo.code,
+              amount: contextDiscount,
+            }
+          : null,
       };
 
       let response;
@@ -128,14 +141,16 @@ const PlaceOrder = () => {
         }
       }
 
-      if (response?.data.success) {
+      if (response?.data?.success) {
         setCartItems({});
+        if (clearPromo) clearPromo(); // safe guard
         toast.success("Order placed successfully!");
         navigate("/orders");
       } else {
-        toast.error(response?.data.message || "Failed to place order");
+        toast.error(response?.data?.message || "Failed to place order");
       }
     } catch (err) {
+      console.error("Order placement error:", err);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsPlacingOrder(false);
@@ -172,48 +187,17 @@ const PlaceOrder = () => {
 
               <div className="p-6 lg:p-8 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <FloatingInput
-                    label="First Name"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={onChangeHandler}
-                  />
-                  <FloatingInput
-                    label="Last Name"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={onChangeHandler}
-                  />
+                  <FloatingInput label="First Name" name="firstName" value={formData.firstName} onChange={onChangeHandler} />
+                  <FloatingInput label="Last Name" name="lastName" value={formData.lastName} onChange={onChangeHandler} />
                 </div>
 
-                <FloatingInput
-                  label="Email Address"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={onChangeHandler}
-                />
+                <FloatingInput label="Email Address" type="email" name="email" value={formData.email} onChange={onChangeHandler} />
 
-                <FloatingInput
-                  label="Street Address, House No., Landmark"
-                  name="street"
-                  value={formData.street}
-                  onChange={onChangeHandler}
-                />
+                <FloatingInput label="Street Address, House No., Landmark" name="street" value={formData.street} onChange={onChangeHandler} />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <FloatingInput
-                    label="City / Town"
-                    name="city"
-                    value={formData.city}
-                    onChange={onChangeHandler}
-                  />
-                  <FloatingInput
-                    label="State"
-                    name="state"
-                    value={formData.state}
-                    onChange={onChangeHandler}
-                  />
+                  <FloatingInput label="City / Town" name="city" value={formData.city} onChange={onChangeHandler} />
+                  <FloatingInput label="State" name="state" value={formData.state} onChange={onChangeHandler} />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative">
@@ -231,13 +215,7 @@ const PlaceOrder = () => {
                     )}
                   </FloatingInput>
 
-                  <FloatingInput
-                    label="Mobile Number"
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={onChangeHandler}
-                  />
+                  <FloatingInput label="Mobile Number" type="tel" name="phone" value={formData.phone} onChange={onChangeHandler} />
                 </div>
 
                 <div className="flex items-center gap-2.5 text-sm pt-2">
@@ -289,6 +267,7 @@ const PlaceOrder = () => {
               <CartTotal
                 deliveryFee={calculatedDeliveryFee}
                 getCartAmount={getCartAmount}
+                discount={contextDiscount}
               />
 
               <button

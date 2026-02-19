@@ -15,25 +15,36 @@ const ShopContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [products, setProducts] = useState([]);
   const [token, setToken] = useState("");
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
+  const [appliedPromo, setAppliedPromo] = useState(null); // ← promo state yahan
+
   const navigate = useNavigate();
 
-  // Load token from localStorage on app start
+  // Promo functions
+  const applyPromo = (promoObj) => {
+    setAppliedPromo(promoObj);
+  };
+
+  const clearPromo = () => {
+    setAppliedPromo(null);
+  };
+
+  const discountAmount = appliedPromo ? appliedPromo.discountAmount : 0;
+
+  // Token load from localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
-    if (savedToken) {
-      setToken(savedToken);
-    }
+    if (savedToken) setToken(savedToken);
   }, []);
 
-  // Redirect from /login to home if already logged in
+  // Redirect if logged in on login page
   useEffect(() => {
     if (token && window.location.pathname === "/login") {
       navigate("/", { replace: true });
     }
   }, [token, navigate]);
 
-  // Sync token with localStorage
+  // Sync token to localStorage
   useEffect(() => {
     if (token) {
       localStorage.setItem("token", token);
@@ -42,72 +53,59 @@ const ShopContextProvider = ({ children }) => {
     }
   }, [token]);
 
-  // Fetch user profile when token is available
+  // Fetch user profile
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!token) {
         setUser(null);
         return;
       }
-
       try {
-        const response = await axios.get(`${backendUrl}/api/user/profile`, {
+        const res = await axios.get(`${backendUrl}/api/user/profile`, {
           headers: { token },
         });
-
-        if (response.data.success) {
-          setUser(response.data.user); // { name, email, ... }
+        if (res.data.success) {
+          setUser(res.data.user);
         } else {
-          // Invalid token → logout
           setToken("");
           setUser(null);
           toast.error("Session expired. Please login again.");
           navigate("/login");
         }
       } catch (error) {
-        console.error("Failed to fetch user profile:", error);
-        // Optional: handle token expiry
+        console.error("Profile fetch error:", error);
       }
     };
-
     fetchUserProfile();
   }, [token, backendUrl, navigate]);
 
   // Fetch products
   const getProductsData = async () => {
     try {
-      const response = await axios.get(`${backendUrl}/api/product/list`);
-      if (response.data.success) {
-        setProducts(response.data.products);
-      }
+      const res = await axios.get(`${backendUrl}/api/product/list`);
+      if (res.data.success) setProducts(res.data.products);
     } catch (error) {
       console.error("Product fetch error:", error);
       toast.error("Failed to load products");
     }
   };
 
-  // Fetch cart
+  // Fetch user cart
   const getUserCart = async (userToken) => {
     try {
-      const response = await axios.post(
+      const res = await axios.post(
         `${backendUrl}/api/cart/get`,
         {},
         { headers: { token: userToken } }
       );
-      if (response.data.success) {
-        setCartItems(response.data.cartData || {});
-      }
+      if (res.data.success) setCartItems(res.data.cartData || {});
     } catch (error) {
       console.error("Cart fetch error:", error);
     }
   };
 
-  // Add to cart
   const addToCart = async (itemId, size) => {
-    if (!size) {
-      toast.error("Please select a size");
-      return;
-    }
+    if (!size) return toast.error("Please select a size");
 
     const cartData = structuredClone(cartItems);
     if (cartData[itemId]) {
@@ -119,25 +117,18 @@ const ShopContextProvider = ({ children }) => {
 
     if (token) {
       try {
-        await axios.post(
-          `${backendUrl}/api/cart/add`,
-          { itemId, size },
-          { headers: { token } }
-        );
-      } catch (error) {
-        toast.error("Failed to sync cart");
+        await axios.post(`${backendUrl}/api/cart/add`, { itemId, size }, { headers: { token } });
+      } catch (err) {
+        toast.error("Failed to add to cart");
       }
     }
   };
 
   const updateQuantity = async (itemId, size, quantity) => {
-    let cartData = structuredClone(cartItems);
-
+    const cartData = structuredClone(cartItems);
     if (quantity <= 0) {
-      delete cartData[itemId]?.[size];
-      if (cartData[itemId] && Object.keys(cartData[itemId]).length === 0) {
-        delete cartData[itemId];
-      }
+      if (cartData[itemId]) delete cartData[itemId][size];
+      if (cartData[itemId] && Object.keys(cartData[itemId]).length === 0) delete cartData[itemId];
     } else {
       if (!cartData[itemId]) cartData[itemId] = {};
       cartData[itemId][size] = quantity;
@@ -151,7 +142,7 @@ const ShopContextProvider = ({ children }) => {
           { itemId, size, quantity },
           { headers: { token } }
         );
-      } catch (error) {
+      } catch (err) {
         toast.error("Failed to update cart");
       }
     }
@@ -160,20 +151,18 @@ const ShopContextProvider = ({ children }) => {
   const getCartCount = () => {
     let count = 0;
     for (const items in cartItems) {
-      for (const size in cartItems[items]) {
-        count += cartItems[items][size];
-      }
+      for (const size in cartItems[items]) count += cartItems[items][size];
     }
     return count;
   };
 
   const getCartAmount = () => {
     let total = 0;
-    for (const items in cartItems) {
-      const product = products.find((p) => p._id === items);
+    for (const id in cartItems) {
+      const product = products.find((p) => p._id === id);
       if (product) {
-        for (const size in cartItems[items]) {
-          total += product.price * cartItems[items][size];
+        for (const size in cartItems[id]) {
+          total += product.price * cartItems[id][size];
         }
       }
     }
@@ -185,11 +174,8 @@ const ShopContextProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (token) {
-      getUserCart(token);
-    } else {
-      setCartItems({});
-    }
+    if (token) getUserCart(token);
+    else setCartItems({});
   }, [token]);
 
   const value = {
@@ -203,15 +189,21 @@ const ShopContextProvider = ({ children }) => {
     cartItems,
     setCartItems,
     addToCart,
-    getCartCount,
     updateQuantity,
+    getCartCount,
     getCartAmount,
     backendUrl,
     token,
     setToken,
-    user,           // ← NEW
-    setUser,        // ← NEW (if needed elsewhere)
+    user,
+    setUser,
     navigate,
+
+    // Promo exports
+    appliedPromo,
+    discountAmount,
+    applyPromo,
+    clearPromo,
   };
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;

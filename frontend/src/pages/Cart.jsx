@@ -7,16 +7,33 @@ import {
   Trash2,
   ArrowRight,
   ChevronRight,
-  Truck,           // ← added
-  ShoppingBag,     // if using in empty cart
+  Truck,
+  ShoppingBag,
   Lock,
-  CheckCircle2,         // if using in summary header
+  CheckCircle2,
+  Tag,
+  XCircle,
 } from "lucide-react";
 import CartTotal from "../components/CartTotal";
 
 const Cart = () => {
-  const { products, currency, cartItems, updateQuantity, getCartAmount } = useContext(ShopContext);
+  const {
+    products,
+    currency,
+    cartItems,
+    updateQuantity,
+    getCartAmount,
+    applyPromo,
+    clearPromo,
+    discountAmount: contextDiscount,
+    appliedPromo: contextAppliedPromo,
+  } = useContext(ShopContext);
+
   const [cartData, setCartData] = useState([]);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoMessage, setPromoMessage] = useState("");
+  const [promoStatus, setPromoStatus] = useState("idle"); // only for UI feedback
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,9 +50,33 @@ const Cart = () => {
     }
   }, [cartItems, products]);
 
-  // ────────────────────────────────────────────────
-  // Empty Cart State – Modern & inviting
-  // ────────────────────────────────────────────────
+  const subtotal = getCartAmount ? getCartAmount() : 0;
+
+  const handleApplyPromo = (e) => {
+    e.preventDefault();
+    if (!promoCode.trim()) return;
+
+    setPromoStatus("loading");
+    setPromoMessage("");
+
+    setTimeout(() => {
+      if (promoCode.trim().toUpperCase() === "SAVE20") {
+        const discountAmt = Math.round(subtotal * 0.2);
+        applyPromo({
+          code: "SAVE20",
+          discountPercent: 20,
+          discountAmount: discountAmt,
+        });
+        setPromoMessage("Promo code applied! 20% off applied.");
+        setPromoStatus("success");
+        setPromoCode("");
+      } else {
+        setPromoMessage("Invalid or expired promo code.");
+        setPromoStatus("error");
+      }
+    }, 600);
+  };
+
   if (cartData.length === 0) {
     return (
       <section className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-5 py-20">
@@ -65,7 +106,6 @@ const Cart = () => {
   return (
     <section className="py-12 lg:py-20 bg-gradient-to-b from-slate-50 via-white to-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
             Your Cart
@@ -76,9 +116,7 @@ const Cart = () => {
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
-          {/* ────────────────────────────────────────────────
-              LEFT: Cart Items – Modern product cards
-          ──────────────────────────────────────────────── */}
+          {/* Cart Items */}
           <div className="lg:col-span-8 space-y-6 lg:space-y-8">
             {cartData.map((item) => {
               const product = products.find((p) => p._id === item._id);
@@ -90,7 +128,6 @@ const Cart = () => {
                   className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 group"
                 >
                   <div className="flex flex-col sm:flex-row">
-                    {/* Image */}
                     <Link
                       to={`/product/${product._id}`}
                       className="sm:w-48 md:w-56 lg:w-64 shrink-0 overflow-hidden bg-gray-50"
@@ -102,7 +139,6 @@ const Cart = () => {
                       />
                     </Link>
 
-                    {/* Details */}
                     <div className="flex-1 p-6 lg:p-8 flex flex-col justify-between">
                       <div>
                         <Link to={`/product/${product._id}`}>
@@ -125,7 +161,6 @@ const Cart = () => {
                         </p>
                       </div>
 
-                      {/* Quantity + Remove */}
                       <div className="flex items-center justify-between mt-6 lg:mt-8">
                         <div className="flex items-center bg-gray-100/80 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200/60">
                           <button
@@ -135,11 +170,7 @@ const Cart = () => {
                           >
                             <Minus size={18} />
                           </button>
-
-                          <span className="w-12 text-center font-semibold text-lg">
-                            {item.quantity}
-                          </span>
-
+                          <span className="w-12 text-center font-semibold text-lg">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item._id, item.size, item.quantity + 1)}
                             className="p-2.5 hover:bg-gray-200 rounded-full transition"
@@ -163,10 +194,72 @@ const Cart = () => {
             })}
           </div>
 
-          {/* ────────────────────────────────────────────────
-              RIGHT: Sticky Summary + CTA
-          ──────────────────────────────────────────────── */}
-          <div className="lg:col-span-4 lg:sticky lg:top-8 h-fit space-y-8">
+          {/* Right: Promo + Summary + CTA */}
+          <div className="lg:col-span-4 lg:sticky lg:top-8 h-fit space-y-6 lg:space-y-8">
+            {/* Promo Code */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+              <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <h3 className="text-lg font-semibold flex items-center gap-2.5 text-gray-900">
+                  <Tag size={20} className="text-amber-600" />
+                  Have a Promo Code?
+                </h3>
+              </div>
+
+              <div className="p-6 lg:p-7">
+                {!contextAppliedPromo ? (
+                  <form onSubmit={handleApplyPromo} className="flex gap-3">
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Enter code (e.g. SAVE20)"
+                      className="flex-1 px-5 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-100 transition"
+                      disabled={promoStatus === "loading"}
+                    />
+                    <button
+                      type="submit"
+                      disabled={promoStatus === "loading" || !promoCode.trim()}
+                      className="px-6 py-3 bg-amber-600 text-white font-medium rounded-xl hover:bg-amber-700 disabled:opacity-50 transition"
+                    >
+                      {promoStatus === "loading" ? "Applying..." : "Apply"}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 size={20} className="text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-800">{contextAppliedPromo.code}</p>
+                        <p className="text-sm text-green-700">-{contextAppliedPromo.discountPercent}% applied</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        clearPromo();
+                        setPromoStatus("idle");
+                        setPromoMessage("");
+                      }}
+                      className="text-gray-500 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition"
+                      aria-label="Remove promo"
+                    >
+                      <XCircle size={20} />
+                    </button>
+                  </div>
+                )}
+
+                {promoMessage && (
+                  <p
+                    className={`mt-3 text-sm text-center font-medium ${
+                      promoStatus === "success" ? "text-green-700" : "text-red-600"
+                    }`}
+                  >
+                    {promoMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Order Summary */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
               <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
                 <h2 className="text-xl font-semibold flex items-center gap-2.5 text-gray-900">
@@ -176,7 +269,11 @@ const Cart = () => {
               </div>
 
               <div className="p-6 lg:p-8">
-                <CartTotal getCartAmount={getCartAmount} isCartPage={true} />
+                <CartTotal
+                  getCartAmount={getCartAmount}
+                  isCartPage={true}
+                  discount={contextDiscount}
+                />
               </div>
             </div>
 
@@ -188,7 +285,7 @@ const Cart = () => {
               <ChevronRight className="group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <div className="text-center text-sm text-gray-500 flex flex-col gap-2">
+            <div className="text-center text-sm text-gray-500 space-y-2">
               <div className="flex items-center justify-center gap-2">
                 <Truck size={16} className="text-amber-600" />
                 Shipping calculated at checkout
@@ -199,7 +296,7 @@ const Cart = () => {
               </div>
             </div>
 
-            <div className="text-center mt-6">
+            <div className="text-center mt-4">
               <Link
                 to="/collection"
                 className="inline-flex items-center gap-2 text-gray-600 hover:text-amber-700 font-medium transition-colors"
